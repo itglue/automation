@@ -1,0 +1,50 @@
+Name: Forest Name
+Kind: Text
+Hint: Full forest name - e.g. domain.com
+Checkboxes: Required, Show in List
+
+Name: Domain Full Name
+Kind: Text
+Hint: Full Active Directory domain name - e.g. corp.domain.com
+Checkboxes: Required, Show in list, Use for title
+
+Name: Domain Short Name
+Kind: Text
+Hint: Short Active Directory domain name - e.g. CORP
+Checkboxes: Required, Show in list, Use for title
+
+Name: AD Level
+Kind: Select
+Hint: Domain Functional Level
+Options: 2000, 2003, 2008, , 2008 R2, 2012, 2012 R2
+Checkboxes: Required, Show in list
+
+Name: Schema Master
+Kind: Tag
+Type: Configurations
+Checkboxes: Required, Show in list
+
+Name: Domain Naming Master
+Kind: Tag
+Type: Configurations
+Checkboxes: Required, Show in list
+
+Name: Relative ID (RID) Master
+Kind: Tag
+Type: Configurations
+Checkboxes: Required, Show in list
+
+Name: PDC Emulator Master
+Kind: Tag
+Type: Configurations
+Checkboxes: Required, Show in list
+
+Name: Infrastructure Master
+Kind: Tag
+Type: Configurations
+Checkboxes: Required, Show in list
+
+Name: Global Catalog Servers (Domain Controllers)
+Kind: Tag
+Type: Configurations
+Checkboxes: Required, Show in list
