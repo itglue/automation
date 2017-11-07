@@ -7,7 +7,7 @@ Options:
 
   -help                  - Display the current help menu
   -silent                - Run the script without printing anything
-  -url  <string>         - Give a URL to POST script output to
+  -api  <string>         - Declare a file name for an API config file to post flex asset directly to IT Glue 
   -file <string>         - Declare a location to save script output to as a csv
   -organization <string> - Declare the name of the organization
 
@@ -29,7 +29,7 @@ Param (
     [switch]$help = $False,
     [switch]$silent = $False,
     [switch]$continuum = $False,
-    [string]$url,
+    [string]$api,
     [string]$file,
     [string]$organization = ""
 )
@@ -157,8 +157,8 @@ if($help) {
     exit
 }
 
-if(($silent) -and !($url -or $file)) {
-    Write-Error -Message "ERROR: Using the silent flag requires a URL, FTP server, or location to save results to." `
+if(($silent) -and !($api -or $file)) {
+    Write-Error -Message "ERROR: Using the silent flag requires a location to save results to." `
                 -Category InvalidOperation `
 }
 else {
@@ -201,7 +201,7 @@ else {
                         1245631 {$Perm = "Change"}
                         1179817 {$Perm = "Read"}
                     }
-                    $permissions= $permissions + "$user $Perm"
+                    $permissions= $permissions + "<p>$Domain\$user $Perm</p>"
                 } # End foreach $ACL
                 $ShareDescription= $description[$i]
                 $DiskPath= $path[$i]
@@ -242,8 +242,6 @@ else {
                         
                         if($api__org_id) {
                             Write-Host "Creating a new flexible asset."
-
-                            ConvertTo-Json $api__body -Depth 100
 
                             $api__output_data = New-ITGlueFlexibleAssets -data $api__body
 
