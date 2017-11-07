@@ -312,9 +312,22 @@ else {
 
                 $api__body = formatAPIData # format data for API call
                 $api__org_id = $api__body.data.attributes.organization_id
-                $api__flex_asset_id = $api_config.flex_asset_id
+                $api__flexible_asset_type_id = $api_config.flexible_asset_type_id
 
-                if($api_config.flex_asset_id -and $api__org_id) {
+                #find if a flex asset for this domain currently exists
+                $currentADFlexAssets = (Get-ITGlueFlexibleAssets -filter_flexible_asset_type_id $api__flexible_asset_type_id -filter_organization_id $api__org_id)
+
+                $fa_index = [array]::indexof($currentADFlexAssets.data.attributes.traits.${key_name_DomainName} ,$Domain)
+
+                if($fa_index -eq '-1') {
+                    $api__flex_asset_id = ''
+                }
+                else {
+                    $api__flex_asset_id = $currentADFlexAssets.data.id[$fa_index]
+                }
+
+
+                if($api__flex_asset_id -and $api__org_id) {
                     Write-Host "Flexible Asset id found! Updating the pre-existing flex asset with any new changes."
 
                     Set-ITGlueFlexibleAssets -id $api__flex_asset_id -data $api__body 
