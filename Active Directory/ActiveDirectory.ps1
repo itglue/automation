@@ -317,15 +317,14 @@ else {
                 #find if a flex asset for this domain currently exists
                 $currentADFlexAssets = (Get-ITGlueFlexibleAssets -filter_flexible_asset_type_id $api__flexible_asset_type_id -filter_organization_id $api__org_id)
 
-                $fa_index = [array]::indexof($currentADFlexAssets.data.attributes.traits.${key_name_DomainName} ,$Domain)
+                $api__flex_asset_id = ''
+                if($currentADFlexAssets.data.attributes.traits.${key_name_DomainName}) {
+                    $fa_index = [array]::indexof($currentADFlexAssets.data.attributes.traits.${key_name_DomainName} ,$Domain)
 
-                if($fa_index -eq '-1') {
-                    $api__flex_asset_id = ''
+                    if($fa_index -ne '-1') {
+                        $api__flex_asset_id = $currentADFlexAssets.data[$fa_index].id
+                    }
                 }
-                else {
-                    $api__flex_asset_id = $currentADFlexAssets.data.id[$fa_index]
-                }
-
 
                 if($api__flex_asset_id -and $api__org_id) {
                     Write-Host "Flexible Asset id found! Updating the pre-existing flex asset with any new changes."
@@ -335,17 +334,9 @@ else {
                 elseif($api__org_id) {
                     Write-Host "No flexible asset id was found... creating a new flexible asset."
 
-                    ConvertTo-Json $api__body -Depth 100
-
                     $api__output_data = New-ITGlueFlexibleAssets -data $api__body
 
                     $api__output_data
-
-                    Write-Host "Writing flex asset id back to config file."
-
-                    $api__flex_asset_id = $api__output_data.data.id
-
-                    updateAPIConfigFile
                 }
             }
             else {
