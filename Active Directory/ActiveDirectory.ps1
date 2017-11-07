@@ -179,7 +179,7 @@ function formatAPIData {
     $api__InfrastructureMaster_id = (Get-ITGlueConfigurations -filter_organization_id $api__org_id -filter_name $InfrastructureMaster)[0].id
 
     $idx = 0
-    $tmp_global_catalog_ids = @(0) * $GlobalCatalogList.Count
+    $tmp_global_catalog_ids = @(0) * $GlobalCatalogs.split(",").Count
 
     $GlobalCatalogs.split(",") | ForEach {
         $tmp_global_catalog_ids[$idx] = (Get-ITGlueConfigurations -filter_organization_id $api__org_id -filter_name $_)[0].id
