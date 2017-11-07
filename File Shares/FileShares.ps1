@@ -19,7 +19,7 @@ Author: Mark Jacobs
 Author: Caleb Albers
 
 .LINK
-https://github.com/KeystoneIT/Documentation-Scripts
+https://github.com/itglue/automation
 
 #>
 
@@ -54,8 +54,8 @@ function writeOutput {
     Write-Host "Disk Path:  `t" -ForegroundColor Gray -NoNewline
     Write-Host "`t `t" $DiskPath "`n"
 
-    Write-Host "Permissions:  `t" -ForegroundColor Gray -NoNewline
-    Write-Host "`t `t" $permissions "`n"
+    <#Write-Host "Permissions:  `t" -ForegroundColor Gray -NoNewline
+    Write-Host "`t `t" $permissions "`n"#>
 }
 
 function updateAPIConfigFile {
@@ -152,7 +152,6 @@ function formatAPIData {
     return $api__body
 }
 
-
 if($help) {
     Get-Help $MyInvocation.MyCommand.Path
     exit
@@ -168,17 +167,17 @@ else {
     }
 
     $computer = $env:COMPUTERNAME
-    $results = @()
+    $SaveData = @()
 
-    $File = gwmi -Class win32_share -ComputerName $computer -Filter "Type=0"
-    $shares = $File| select -ExpandProperty Name
-    $description =  $File| select -ExpandProperty Description
-    $path = $File| select -ExpandProperty Path
-    $server= ([regex]::matches($File, "(?<=[\\][\\])[^\\]+"))
+    $Files = gwmi -Class win32_share -ComputerName $computer -Filter "Type=0" | Where-Object{$_.Name -NotMatch "^print|^NETLOGON|^MTATempStore|^prnproc"}
+    $shares = $Files| select -ExpandProperty Name
+    $description =  $Files| select -ExpandProperty Description
+    $path = $Files| select -ExpandProperty Path
+    $server= ([regex]::matches($Files, "(?<=[\\][\\])[^\\]+"))
 
     $i=0
     foreach ($share in $shares) {
-        if( $share -notlike "print$" -or -notlike "NETLOGON" -or -notlike "MTATempStore$"){
+        #if( $shares -notlike "print$" -or $shares -notlike "NETLOGON" -or $shares -notlike "MTATempStore$"){
             $acl = $null # or $sharePath[$i]
 
             $permissions= ""
@@ -189,10 +188,10 @@ else {
 
 
 
-            $file = Get-WMIObject -Class Win32_LogicalShareSecuritySetting -Filter "name='$Share'"  -ComputerName $computer
-            if($file){
+            $files = Get-WMIObject -Class Win32_LogicalShareSecuritySetting -Filter "name='$Share'"  -ComputerName $computer | where-Object {$share -NotLike "print$" -or $share -NotLike "NETLOGON" -or $share -NotLike "MTATempStore$"} 
+            if($files){
                 $obj = @()
-                $ACLS = $file.GetSecurityDescriptor().Descriptor.DACL
+                $ACLS = $files.GetSecurityDescriptor().Descriptor.DACL
                 foreach($ACL in $ACLS){
                     $User = $ACL.Trustee.Name
                     if(!($user)){$user = $ACL.Trustee.SID} #If there is no username use SID
@@ -202,22 +201,22 @@ else {
                         1245631 {$Perm = "Change"}
                         1179817 {$Perm = "Read"}
                     }
-                    $permissions= $permissions + "<p>$Domain\$user $Perm</p>"
+                    $permissions= $permissions + "$user $Perm"
                 } # End foreach $ACL
                 $ShareDescription= $description[$i]
                 $DiskPath= $path[$i]
 
                 if(!$silent){writeOutput}
 
-                if($file) {
+                if($url -or $files) {
                     $PostData = @{
-                        "Organization" = "$organization"
+                        #"Organization" = "$organization"
                         "Share Name" = "$share"
                         "Share Description" = "$ShareDescription"
                         "Server" = "$currentServer"
                         "Share Path" = "$writePath"
                         "Disk Path" = "$DiskPath"
-                        "Permissions" = "$permissions"
+                        #"Permissions" = "$permissions"
                     }
                 }
                 if($file) {
@@ -258,7 +257,7 @@ else {
 
             $i++
             }# end if $file
-        }# end if(notlike)
+        #}# end if(notlike)
     } # end foreach $share
     if($file){
         $SaveData | export-csv -Path $file -NoTypeInformation
