@@ -100,7 +100,6 @@ function updateAPIConfigFile {
 
 @"
 @{
-    flex_asset_id = '$api__flex_asset_id'
     org_id = '$api__org_id'
     flexible_asset_type_id = '$api__flex_asset_type_id'
 
@@ -331,7 +330,7 @@ else {
 
                     Write-Host "Writing flex asset id back to config file."
 
-                    $api__flex_asset_id = $api__output_data.data.id # VERIFY THIS PLZZZ
+                    $api__flex_asset_id = $api__output_data.data.id
 
                     updateAPIConfigFile
                 }

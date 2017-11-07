@@ -9,20 +9,12 @@ parameter will make an attempt at matching that organization name with the names
 exact match is required. If it is found, this configuration file will automatically be updated with the
 corresponding $org_id
 
-The $flex_asset_id corresponds to the specific ID for a given flex asset (this is unique across all organizations
-and flexible assets in your IT Glue account). If no $flex_asset_id is given, a NEW flex asset will be created and
-this configuration file will automatically be updated with the new id. If a $flex_asset_id is specified, the 
-ActiveDirectory.ps1 script will UPDATE the existing flex asset rather than create a new one. This is advantageous
-for situations where you wish to run the ActiveDirectory.ps1 script on a scheduled basis to keep the data present
-in IT Glue automatically up to date.
-
 The $flexible_asset_type_id corresponds to the flexible asset type that represents what an "Active Directory" flex
 asset should look like for IT Glue. Please run `(Get-ITGlueFlexibleAssetTypes).data` and find the type id
 corresponding to your account's flexible asset type for Active Directory. Additionally, ensure that the proper
 fields are present in that template.
 
 #>
-flex_asset_id = ""
 
 
 # REQUIRED

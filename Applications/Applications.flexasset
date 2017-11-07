@@ -1,0 +1,62 @@
+Name: Name
+Kind: Text
+Hint: Primary application title without version - e.g. SharePoint, Exchange, Lync, QuickBooks, SQL Server
+Checkboxes: Required, Show in List, Use for title
+
+Name: Category
+Kind: Select
+Hint: Choose primary category for application
+Options: EMR, CRM, Database, ERP, Finance, Learning management / Gradebook, Marketing, Practice Management, Sales, Security, Other
+Checkboxes: Show in list
+
+Name: Version
+Kind: Text
+Hint: Major and minor version number - e.g. 2008 R2, XP, 7.3 SP1, etc.
+Checkboxes: Show in list, Use for title
+
+Name: Importance
+Kind: Select
+Hint: Importance of application to organization - e.g. downtime tolerance
+Options: Critical, High, Medium, Low
+Checkboxes: Show in list
+
+Name: Business Impact
+Kind: Text
+Hint: Describe business impact of outage - e.g. sales unable to occur
+Checkboxes: Required, Show in list
+
+Name: Application Champion
+Kind: Tag
+Type: Contacts
+Hint: Select application champion(s) or primary contact(s)
+Checkboxes: Show in list
+
+Name: Application Server(s)
+Kind: Tag
+Type: Configurations
+Checkboxes:
+
+Name: Vendor
+Kind: Tag
+Type: Organizations
+Hint: Microsoft
+Checkboxes: Show in list
+
+Name: Licensing & Support Information
+Kind: Header
+
+Name: Licensing Information
+Kind: Tag
+Type: Licensing
+Hint: Tag licensing for this application
+Checkboxes:
+
+Name: Warranty/Service Contract
+Kind: Tag
+Type: Warranty/Service Contracts
+Checkboxes: Show in list
+
+Name: Notes
+Kind: Textbox
+Hint: Any additional notes
+Checkboxes: Show in list

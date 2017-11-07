@@ -1,0 +1,9 @@
+<Applications>
+    <software name="Paychex" category="Finance"/>
+    <software name="AdvancedMD" category="EMR"/>
+    <software name="eClinicalWorks" category="EMR"/>
+    <software name="Quickbooks" category="Business and Accounting"/>
+    <software name="Quicken" category="Finance"/>
+    <software name="Sage" category="Business and Accounting"/>
+    <software name="ShadowProtect" category="Business and Accounting"/>
+</Applications>
