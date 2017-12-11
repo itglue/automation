@@ -174,12 +174,20 @@ else {
     $description =  $Files| select -ExpandProperty Description
     $path = $Files| select -ExpandProperty Path
     $server= ([regex]::matches($Files, "(?<=[\\][\\])[^\\]+"))
+    #$currentFSFlexAssets = (Get-ITGlueFlexibleAssets -filter_flexible_asset_type_id $api__flex_asset_type_id -filter_organization_id $api__org_id)
+    $currentFSFlexAssets = (Get-ITGlueFlexibleAssets -filter_flexible_asset_type_id 73668 -filter_organization_id 2477562)
 
     $i=0
     foreach ($share in $shares) {
         #if( $shares -notlike "print$" -or $shares -notlike "NETLOGON" -or $shares -notlike "MTATempStore$"){
             $acl = $null # or $sharePath[$i]
-
+            if($currentFSFlexAssets.data.attributes.name -eq $share){
+                #get current ID
+                $id = $currentFSFlexAssets.data | where {$_.attributes.name -eq $share } | select -ExpandProperty id
+                Write-Host $id " ID Found for " $share
+                Continue
+            }
+            else {
             $permissions= ""
             Write-Host $share -ForegroundColor Green
             Write-Host $('-' * $share.Length) -ForegroundColor Green
@@ -256,7 +264,7 @@ else {
                         
                         if($api__org_id) {
                             Write-Host "Creating a new flexible asset."
-
+                            #Writes asset need to perform update check
                             $api__output_data = New-ITGlueFlexibleAssets -data $api__body
 
                             $api__output_data
@@ -269,6 +277,7 @@ else {
 
             $i++
             }# end if $file
+            }#End if checking for new shares to be created
         #}# end if(notlike)
     } # end foreach $share
     if($file){
