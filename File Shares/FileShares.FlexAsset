@@ -1,0 +1,43 @@
+Name: File Server/Share
+Kind: Header
+
+Name: Share Name
+Kind: Text
+Hint: e.g. Sales
+Checkboxes: Required, Show in list, Use for title
+
+Name: Share Description
+Kind: Text
+Hint: e.g. Sales Information
+Checkboxes: Required, Show in list
+
+Name: Servers
+Kind: Tag
+Type: Configurations
+Hint: Tag servers delivering this share
+Checkboxes: Show in list
+
+Name: Mapped Drive
+Kind: Text
+Hint: e.g. S:\
+Checkboxes: Show in list, Use for title
+
+Name: Share Path
+Kind: Text
+Hint: e.g. \\SERVER\Share
+Checkboxes: Show in list
+
+Name: Disk Path
+Kind: Text
+Hint: e.g. D:\Share
+Checkboxes: Show in list
+
+Name: Share Permissions
+Kind: Textbox
+Hint: What members have access?
+Checkboxes: Show in list
+
+Name: NTFS Permissions
+Kind: Textbox
+Hint: What members have security access to the root share folder?
+Checkboxes: Show in list

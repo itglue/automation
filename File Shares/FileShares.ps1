@@ -54,8 +54,11 @@ function writeOutput {
     Write-Host "Disk Path:  `t" -ForegroundColor Gray -NoNewline
     Write-Host "`t `t" $DiskPath "`n"
 
-    <#Write-Host "Permissions:  `t" -ForegroundColor Gray -NoNewline
-    Write-Host "`t `t" $permissions "`n"#>
+    Write-Host "Permissions:  `t" -ForegroundColor Gray -NoNewline
+    Write-Host "`t `t" $permissions "`n"
+
+    Write-Host "NTFS Permissions:  `t" -ForegroundColor Gray -NoNewline
+    Write-Host "`t `t" $NTFSPermissions "`n"
 }
 
 function updateAPIConfigFile {
@@ -68,6 +71,7 @@ function updateAPIConfigFile {
     $api__key_name_SharePath = $api_config.key_name_SharePath
     $api__key_name_DiskPath = $api_config.key_name_DiskPath
     $api__key_name_Permissions = $api_config.key_name_Permissions
+    $api__key_name_NTFSPermissions = $api_config.key_name_NTFSPermissions
     
     
 @"
@@ -81,6 +85,7 @@ function updateAPIConfigFile {
         key_name_SharePath = '$api__key_name_SharePath'
         key_name_DiskPath = '$api__key_name_DiskPath'
         key_name_Permissions = '$api__key_name_Permissions'
+        key_name_NTFSPermissions = '$api__key_name_NTFSPermissions'
 }
 "@ | Out-File -FilePath $api -Force
 }
@@ -95,6 +100,7 @@ function formatAPIData {
     $api__key_name_SharePath = $api_config.key_name_SharePath
     $api__key_name_DiskPath = $api_config.key_name_DiskPath
     $api__key_name_Permissions = $api_config.key_name_Permissions
+    $api__key_name_NTFSPermissions = $api_config.key_name_NTFSPermissions
     
 
     if($api_config.org_id) {
@@ -144,6 +150,7 @@ function formatAPIData {
                     $api__key_name_SharePath = $writePath
                     $api__key_name_DiskPath = $DiskPath
                     $api__key_name_Permissions = $permissions
+                    $api__key_name_NTFSPermissions = $NTFSPermissions
                 }
             }
         }
@@ -174,12 +181,20 @@ else {
     $description =  $Files| select -ExpandProperty Description
     $path = $Files| select -ExpandProperty Path
     $server= ([regex]::matches($Files, "(?<=[\\][\\])[^\\]+"))
+    #$currentFSFlexAssets = (Get-ITGlueFlexibleAssets -filter_flexible_asset_type_id $api__flex_asset_type_id -filter_organization_id $api__org_id)
+    $currentFSFlexAssets = (Get-ITGlueFlexibleAssets -filter_flexible_asset_type_id 73668 -filter_organization_id 2477562)
 
     $i=0
     foreach ($share in $shares) {
         #if( $shares -notlike "print$" -or $shares -notlike "NETLOGON" -or $shares -notlike "MTATempStore$"){
             $acl = $null # or $sharePath[$i]
-
+            if($currentFSFlexAssets.data.attributes.name -eq $share){
+                #get current ID
+                $id = $currentFSFlexAssets.data | where {$_.attributes.name -eq $share } | select -ExpandProperty id
+                Write-Host $id " ID Found for " $share
+                Continue
+            }
+            else {
             $permissions= ""
             Write-Host $share -ForegroundColor Green
             Write-Host $('-' * $share.Length) -ForegroundColor Green
@@ -206,6 +221,17 @@ else {
                 $ShareDescription= $description[$i]
                 $DiskPath= $path[$i]
 
+                $NTFSPermissions = ''
+                $acls = Get-Acl $DiskPath | select -ExpandProperty Access
+                $Identities = $acls | select IdentityReference,FileSystemRights
+                $formattedIdentities = ''
+                foreach($ident in $Identities) {
+                    $formattedIdentities = $formattedIdentities + "<p>" + $ident.IdentityReference  + "   -   " + $ident.FileSystemRights + "</p>"
+                }
+                $NTFSPermissions = $formattedIdentities
+                write-host $NTFSPermissions
+                
+
                 if(!$silent){writeOutput}
 
                 if($url -or $files) {
@@ -217,6 +243,7 @@ else {
                         "Share Path" = "$writePath"
                         "Disk Path" = "$DiskPath"
                         #"Permissions" = "$permissions"
+                        "NTFS Permissions" = "$NTFSPermissions"
                     }
                 }
                 if($file) {
@@ -225,6 +252,20 @@ else {
                 if($api) {
                     try {
                         Import-Module ITGlueAPI
+
+                        write-host "getting flex obj"
+				        $global:out = Get-ITGlueFlexibleAssetTypes
+				        write-host "getting flex obj ID"
+				        $global:id = $out.data | where {$_.attributes.name -like "*File Sharing*"} | select -ExpandProperty id
+				        $global:fat_id = $id 
+				        write-host "getting PWD and setting configfile var"
+				        $global:pwd = (Get-Item -Path ".\" -Verbose).FullName
+				        $global:configfile = $pwd + "\" + $api 
+				        $global:datafile = $pwd + "\" + $api.replace(".ps1",".psd1")
+				        $global:text2replace = "flexible_asset_type_id = ''"
+				        $global:newtext = "flexible_asset_type_id = '" + $fat_id + "'"			
+				        (Get-Content $configfile).replace($text2replace, $newtext) | Set-Content $configfile
+
                     }
                     catch {
                         Write-Error "ERROR: The IT Glue API PowerShell module cannot be imported."
@@ -242,7 +283,7 @@ else {
                         
                         if($api__org_id) {
                             Write-Host "Creating a new flexible asset."
-
+                            #Writes asset need to perform update check
                             $api__output_data = New-ITGlueFlexibleAssets -data $api__body
 
                             $api__output_data
@@ -255,6 +296,7 @@ else {
 
             $i++
             }# end if $file
+            }#End if checking for new shares to be created
         #}# end if(notlike)
     } # end foreach $share
     if($file){
