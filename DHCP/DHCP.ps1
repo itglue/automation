@@ -117,16 +117,14 @@ function formatAPIData {
     $api__Server_id = (Get-ITGlueConfigurations -filter_organization_id $api__org_id -filter_name $currentServer)[0].id
 
     $api__body = @{
-        data = @{
-            type = "flexible_assets"
-            attributes = @{
-                organization_id = $api__org_id
-                flexible_asset_type_id = $api_config.flexible_asset_type_id
-                traits = @{
-                    $api__key_name_ScopeName = $share
-                    $api__key_name_Server = $api__Server_id
-                    $api__key_name_ScopeBounds = $Start + " - " + $End
-                }
+        type = "flexible_assets"
+        attributes = @{
+            organization_id = $api__org_id
+            flexible_asset_type_id = $api_config.flexible_asset_type_id
+            traits = @{
+                $api__key_name_ScopeName = $share
+                $api__key_name_Server = $api__Server_id
+                $api__key_name_ScopeBounds = $Start + " - " + $End
             }
         }
     }

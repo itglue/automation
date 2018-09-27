@@ -190,23 +190,21 @@ function formatAPIData {
 
 
     $api__body = @{
-        data = @{
-            type = "flexible_assets"
-            attributes = @{
-                organization_id = $api__org_id
-                flexible_asset_type_id = $api_config.flexible_asset_type_id
-                traits = @{
-                    $api__key_name_ADForestName = $ADForestName
-                    $api__key_name_ADFunctionalLevel = $ADFunctionalLevel
-                    $api__key_name_DomainName = $Domain
-                    $api__key_name_DomainShortName = $ADShortName
-                    $api__key_name_SchemaMaster = $api__SchemaMaster_id
-                    $api__key_name_DomainNamingMaster = $api__DomainNamingMaster_id
-                    $api__key_name_RIDMaster = $api__RIDMaster_id
-                    $api__key_name_PDCEmulator = $api__PDCEmulator_id
-                    $api__key_name_InfrastructureMaster = $api__InfrastructureMaster_id
-                    $api__key_name_GlobalCatalogServers = @($api__GlobalCatalogs)
-                }
+        type = "flexible_assets"
+        attributes = @{
+            organization_id = $api__org_id
+            flexible_asset_type_id = $api_config.flexible_asset_type_id
+            traits = @{
+                $api__key_name_ADForestName = $ADForestName
+                $api__key_name_ADFunctionalLevel = $ADFunctionalLevel
+                $api__key_name_DomainName = $Domain
+                $api__key_name_DomainShortName = $ADShortName
+                $api__key_name_SchemaMaster = $api__SchemaMaster_id
+                $api__key_name_DomainNamingMaster = $api__DomainNamingMaster_id
+                $api__key_name_RIDMaster = $api__RIDMaster_id
+                $api__key_name_PDCEmulator = $api__PDCEmulator_id
+                $api__key_name_InfrastructureMaster = $api__InfrastructureMaster_id
+                $api__key_name_GlobalCatalogServers = @($api__GlobalCatalogs)
             }
         }
     }
