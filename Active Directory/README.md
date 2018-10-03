@@ -33,7 +33,7 @@ This script makes use of a configuration file to hold neccessary data that the A
 
 In order to get started easily, an `Initialize-ActiveDirectoryFlexAsset.ps1` script has been created. Running this script will automatically create a new Flexible Asset Template in your IT Glue account and generate a `config.psd1` configuration file.
 
-If you wish to modify an existing flexible asset type rather than creating a new one, please see the [Advanced Configuration](https://github.com/itglue/powershellwrapper/Active%20Directory/Advanced%20Configuration.md) instructions.
+If you wish to modify an existing flexible asset type rather than creating a new one, please see the [Advanced Configuration](https://github.com/itglue/automation/blob/master/Active%20Directory/Advanced%20Configuration.md) instructions.
 
 :warning: Although this configuration is a one-time process, the `$org_id` parameter in the configuration file must be updated for each organization you wish to run the script for. You can find this organization id by navigating to the organization page in IT Glue and looking at the URL in your web browser. If the page is `https://subdomain.itglue.com/1234567`, the organization id is `1234567`.
 
