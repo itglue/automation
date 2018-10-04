@@ -9,6 +9,7 @@ Options:
     -help               - Display the current help menu
     -silent             - Run the script without printing anything
     -FQDN               - Show Fully Qualified Domain Name (server.domain.tld) instead of hostname
+    -Organization       - Attempt an auto-match based on organization name (must be an exact match to what exists in IT Glue)
     -api  <string>      - Declare a file name for an API config file to post flex asset directly to IT Glue 
     -file <string>      - Declare a location to save script output to as a csv
 
@@ -50,10 +51,10 @@ function writeOutput {
     Write-Host "`t `t" $organization "`n"
 
     Write-Host "Forest Name...  `t   `t" -ForegroundColor Gray -NoNewline
-    Write-Host "`t `t" $ADForestName "`n"
+    Write-Host "`t" $ADForestName "`n"
 
     Write-Host "Getting AD Functional Level..." -ForegroundColor Gray -NoNewline
-    Write-Host "`t" $ADFunctionalLevel "`n"
+    Write-Host "`t `t" $ADFunctionalLevel "`n"
 
     Write-Host "Getting AD Full Name...  " -ForegroundColor Green -NoNewline
     Write-Host "`t `t" $Domain "`n"
@@ -69,7 +70,7 @@ function writeOutput {
     Write-Host "`t Domain Naming Master:   `t " -ForegroundColor Yellow -NoNewline
     Write-Host $DomainNamingMaster
 
-    Write-Host "`t Relative ID (RID) Master:   " -ForegroundColor Yellow -NoNewline
+    Write-Host "`t Relative ID (RID) Master:   `t " -ForegroundColor Yellow -NoNewline
     Write-Host $RIDMaster
 
     Write-Host "`t PDC Emulator:           `t " -ForegroundColor Yellow -NoNewline
@@ -172,17 +173,17 @@ function formatAPIData {
 
     # Get the ID for each configuration
 
-    $api__SchemaMaster_id = (Get-ITGlueConfigurations -filter_organization_id $api__org_id -filter_name $SchemaMaster)[0].id
-    $api__DomainNamingMaster_id = (Get-ITGlueConfigurations -filter_organization_id $api__org_id -filter_name $DomainNamingMaster)[0].id
-    $api__RIDMaster_id = (Get-ITGlueConfigurations -filter_organization_id $api__org_id -filter_name $RIDMaster)[0].id
-    $api__PDCEmulator_id = (Get-ITGlueConfigurations -filter_organization_id $api__org_id -filter_name $PDCEmulator)[0].id
-    $api__InfrastructureMaster_id = (Get-ITGlueConfigurations -filter_organization_id $api__org_id -filter_name $InfrastructureMaster)[0].id
+    $api__SchemaMaster_id = (Get-ITGlueConfigurations -filter_organization_id $api__org_id -filter_name $SchemaMaster)[0].data.id
+    $api__DomainNamingMaster_id = (Get-ITGlueConfigurations -filter_organization_id $api__org_id -filter_name $DomainNamingMaster)[0].data.id
+    $api__RIDMaster_id = (Get-ITGlueConfigurations -filter_organization_id $api__org_id -filter_name $RIDMaster)[0].data.id
+    $api__PDCEmulator_id = (Get-ITGlueConfigurations -filter_organization_id $api__org_id -filter_name $PDCEmulator)[0].data.id
+    $api__InfrastructureMaster_id = (Get-ITGlueConfigurations -filter_organization_id $api__org_id -filter_name $InfrastructureMaster)[0].data.id
 
     $idx = 0
     $tmp_global_catalog_ids = @(0) * $GlobalCatalogs.split(",").Count
 
     $GlobalCatalogs.split(",") | ForEach {
-        $tmp_global_catalog_ids[$idx] = (Get-ITGlueConfigurations -filter_organization_id $api__org_id -filter_name $_)[0].id
+        $tmp_global_catalog_ids[$idx] = (Get-ITGlueConfigurations -filter_organization_id $api__org_id -filter_name $_)[0].data.id
         $idx++
     }
 
@@ -204,7 +205,7 @@ function formatAPIData {
                 $api__key_name_RIDMaster = $api__RIDMaster_id
                 $api__key_name_PDCEmulator = $api__PDCEmulator_id
                 $api__key_name_InfrastructureMaster = $api__InfrastructureMaster_id
-                $api__key_name_GlobalCatalogServers = @($api__GlobalCatalogs)
+                $api__key_name_GlobalCatalogServers = $api__GlobalCatalogs
             }
         }
     }
@@ -245,6 +246,7 @@ else {
         Windows2008R2Forest {$ADFunctionalLevel = "2008 R2"}
         Windows2012Forest   {$ADFunctionalLevel = "2012"}
         Windows2012R2Forest {$ADFunctionalLevel = "2012 R2"}
+        Windows2016Forest   {$ADFunctionalLevel = "2016"}
     }
 
     # Get Global Catalog Servers (Domain Controllers)
@@ -309,15 +311,16 @@ else {
                 Write-Host "Active Directory flex asset configuration file found!" -ForegroundColor Green
 
                 $api__body = formatAPIData # format data for API call
-                $api__org_id = $api__body.data.attributes.organization_id
+                $api__org_id = $api__body.attributes.organization_id
                 $api__flexible_asset_type_id = $api_config.flexible_asset_type_id
+                $api__key_name_DomainName = $api_config.key_name_DomainName
 
                 #find if a flex asset for this domain currently exists
                 $currentADFlexAssets = (Get-ITGlueFlexibleAssets -filter_flexible_asset_type_id $api__flexible_asset_type_id -filter_organization_id $api__org_id)
 
                 $api__flex_asset_id = ''
-                if($currentADFlexAssets.data.attributes.traits.${key_name_DomainName}) {
-                    $fa_index = [array]::indexof($currentADFlexAssets.data.attributes.traits.${key_name_DomainName} ,$Domain)
+                if($currentADFlexAssets.data.attributes.traits.${api__key_name_DomainName}) {
+                    $fa_index = [array]::indexof($currentADFlexAssets.data.attributes.traits.${api__key_name_DomainName} ,$Domain)
 
                     if($fa_index -ne '-1') {
                         $api__flex_asset_id = $currentADFlexAssets.data[$fa_index].id
@@ -327,14 +330,14 @@ else {
                 if($api__flex_asset_id -and $api__org_id) {
                     Write-Host "Flexible Asset id found! Updating the pre-existing flex asset with any new changes."
 
-                    Set-ITGlueFlexibleAssets -id $api__flex_asset_id -data $api__body 
+                    (Set-ITGlueFlexibleAssets -id $api__flex_asset_id -data $api__body).data
                 }
                 elseif($api__org_id) {
                     Write-Host "No flexible asset id was found... creating a new flexible asset."
 
                     $api__output_data = New-ITGlueFlexibleAssets -data $api__body
 
-                    $api__output_data
+                    $api__output_data.data
                 }
             }
             else {

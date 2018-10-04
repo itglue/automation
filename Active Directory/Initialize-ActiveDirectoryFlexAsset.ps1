@@ -232,9 +232,9 @@ if($output) {
     flexible_asset_type_id = '$fat_id'
 
     key_name_ADForestName = 'forest-name'
-    key_name_ADFunctionalLevel = 'domain-full-name'
-    key_name_DomainName = 'domain-short-name'
-    key_name_DomainShortName = 'ad-level'
+    key_name_ADFunctionalLevel = 'ad-level'
+    key_name_DomainName = 'domain-full-name'
+    key_name_DomainShortName = 'domain-short-name'
     key_name_SchemaMaster = 'schema-master'
     key_name_DomainNamingMaster = 'domain-naming-master'
     key_name_RIDMaster = 'relative-id-rid-master'
