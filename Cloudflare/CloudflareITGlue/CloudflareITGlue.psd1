@@ -12,7 +12,7 @@
     RootModule        = 'CloudflareITGlue.psm1'
 
     # Version number of this module.
-    ModuleVersion     = '1.0.0'
+    ModuleVersion     = '1.1.0'
 
     # Supported PSEditions
     # CompatiblePSEditions = @()
@@ -24,7 +24,7 @@
     Author            = 'Jeremy Colby'
 
     # Company or vendor of this module
-    CompanyName       = 'Nucleus Networks'
+    CompanyName       = ''
 
     # Copyright statement for this module
     Copyright         = '(c) 2018 Jeremy Colby. All rights reserved.'
@@ -70,10 +70,7 @@
     'Private\CloudflareZoneData.ps1',
     'Private\ITGlueWebRequest.ps1',
     'Public\CloudflareITGlueAPIAuth.ps1',
-    'Public\Get-CloudflareITGlueMatchingTable.ps1',
-    'Public\Get-ITGlueClientUIDList.ps1',
     'Public\New-CloudflareITGlueFlexAssetType.ps1',
-    'Public\Set-CloudflareITGlueClientUIDRecords.ps1',
     'Public\Sync-CloudflareITGlueFlexibleAssets.ps1'
 
 
@@ -81,9 +78,6 @@
     FunctionsToExport = 'Add-CloudflareITGlueAPIAuth',
     'Get-CloudflareITGlueAPIAuth',
     'Remove-CloudflareITGlueAPIAuth',
-    'Get-CloudflareITGlueMatchingTable',
-    'Get-ITGlueClientUIDList',
-    'Set-CloudflareITGlueClientUIDRecords',
     'New-CloudflareITGlueFlexAssetType',
     'Sync-CloudflareITGlueFlexibleAssets'
 

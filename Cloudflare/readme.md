@@ -4,14 +4,15 @@
 
 - Sync Cloudflare DNS Zones to ITGlue Client Organizations as Flex Assets
 
-![screenshot](https://user-images.githubusercontent.com/43423017/47933412-be5a1900-de91-11e8-805e-d2a27a5f804c.png)
+![screenshot](https://user-images.githubusercontent.com/43423017/48573233-6e7f4700-e8c0-11e8-8dd1-793e06620e96.png)
 
 >**Name:** Name of the Cloudflare DNS Zone  
 >**Last Sync:** Timestamp when flex asset is created/updated  
 >**Nameservers:** Nameservers designated by Cloudflare  
 >**Status:** Status of the Cloudflare DNS Zone  
 >**Zone File:** BIND format zone file  
->**DNS Records:** Table of all DNS records in the zone  
+>**Domain Tracker:** Domain Tracker Tag  
+>**DNS Records:** Table of all DNS records in the zone and a link to the zone page in Cloudflare  
 >**Revisions:** Flex assets contain revision history by nature  
 
 ## How it works
@@ -24,7 +25,6 @@
 [Installing the module](#installing-the-module)  
 [API Authorization](#api-authorization)  
 [Creating the ITGlue Flex Asset Type](#creating-the-itglue-flex-asset-type)  
-[Matching Cloudflare DNS Zones to ITGlue Client Orgs](#matching-cloudflare-dns-zones-to-itglue-client-orgs)  
 
 ### Installing the module
 
@@ -74,42 +74,9 @@ New-CloudflareITGlueFlexAssetType
 ```
 
 >This will create a new Flex Asset Type in ITGlue called **Cloudflare DNS**.  
-
-### Matching Cloudflare DNS Zones to ITGlue Client Orgs
-
-This is done with TXT records that are easily created/deleted/modified with `Set-CloudflareITGlueClientUIDRecords`  
-
-#### Client UID List
-
-```powershell
-Get-ITGlueClientUIDList
-```
-
->This will create and open a txt file in the current directory containing UIDs for all active ITGlue clients.  
->UID format: `OrganizationName__OrganizationId`  
-
-#### Client/Zone Matching Table
-
-```powershell
-Get-CloudflareITGlueMatchingTable
-```
-
->This will create and open a csv file in the current directory with the columns `ZoneId`, `ZoneName` & `ITGlueClientUID`.  
-
-#### Matching
-
->Fill in the `ITGlueClientUID` field in the csv with the corresponding client UIDs obtained in the previous step. Do this for zones you wish to sync to ITGlue.  
-
-#### UID TXT Records
-
-```powershell
-Set-CloudflareITGlueClientUIDRecords -MatchingTable ITGlueCloudflareMatchingTable.csv
-```
-
->This command takes the csv and creates/deletes/modifies TXT records called **itglueclientuid** that correspond with whats been entered.  
->Update the csv and run this at anytime to create/delete/modify the TXT records.  
->Use `Get-CloudflareITGlueMatchingTable` for an updated csv, the `ITGlueClientUID` field will correspond with existing TXT records
->and be empty for zones where the TXT record does not exist.  
+>Customize your ITGlue sidebar in the **Account > Settings > General > Customize Sidebar** section.  
+>If you need to use a different name there is an optional parameter:  
+>`New-CloudflareITGlueFlexAssetType -Name 'My Cloudflare DNS'`  
 
 ## Usage
 
@@ -117,8 +84,10 @@ Set-CloudflareITGlueClientUIDRecords -MatchingTable ITGlueCloudflareMatchingTabl
 Sync-CloudflareITGlueFlexibleAssets
 ```
 
->This command will check all zones for the TXT record then create/update the ITGlue flex assets for the respective organizations.  
->Remember `Set-CloudflareITGlueClientUIDRecords` will create, delete and modify the **itglueclientuid** TXT records if you ever need to make changes to which records are syncing or just want to delete the TXT records.  
+>This command will match Cloudflare zones to ITGlue orgs using the Domain Tracker then sync the zones as flex assets to their respective organizations.  
+>Cloudflare zones that are not in the Domain Tracker will be output to the console.  
+>If you used a custom name for the flex asset type, you'll also need to pass it to the sync command via the optional FlexAssetType parameter:  
+>`Sync-CloudflareITGlueFlexibleAssets -FlexAssetType 'My Cloudflare DNS'`  
 
 Set this up to run at an interval of your choosing however you like.  
 
@@ -135,6 +104,8 @@ Set this up to run at an interval of your choosing however you like.
 
 ## References
 
-[Cloudflare API Documentation](https://api.cloudflare.com/)  
-[ITGlue API Documentation](https://api.itglue.com/developer/)  
 [Invoke-RestMethod Documentation](https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/invoke-restmethod/)  
+[ITGlue API Documentation](https://api.itglue.com/developer/)  
+[Cloudflare API Documentation](https://api.cloudflare.com/)  
+>On Cloudflare Rate Limiting: "The Cloudflare API sets a maximum of 1,200 requests in a five minute period."  
+>You may still see the odd gateway timeout even though the rate limit is accounted for.  

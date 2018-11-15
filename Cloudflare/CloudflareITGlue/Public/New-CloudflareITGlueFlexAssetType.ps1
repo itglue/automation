@@ -1,9 +1,13 @@
 function New-CloudflareITGlueFlexAssetType {
+    param(
+        [string]$Name = 'Cloudflare DNS'
+    )
+
     $Body = @{
         Data = @{
             type          = 'flexible_asset_types'
             attributes    = @{
-                name         = 'Cloudflare DNS'
+                name         = $Name
                 description  = 'DNS Zones from Cloudflare.'
                 icon         = 'cloud'
                 enabled      = $true
@@ -44,7 +48,7 @@ function New-CloudflareITGlueFlexAssetType {
                                 kind         = 'Textbox'
                                 hint         = 'Cloudflare provided nameservers for this zone'
                                 required     = $true
-                                show_in_list = $true
+                                show_in_list = $false
                             }
                         },
                         @{
@@ -73,6 +77,18 @@ function New-CloudflareITGlueFlexAssetType {
                             type       = 'flexible_asset_fields'
                             attributes = @{
                                 order        = 6
+                                name         = 'Domain Tracker'
+                                kind         = 'Tag'
+                                hint         = 'Tagged in Domain Tracker'
+                                tag_type     = 'Domains'
+                                required     = $false
+                                show_in_list = $false
+                            }
+                        },
+                        @{
+                            type       = 'flexible_asset_fields'
+                            attributes = @{
+                                order        = 7
                                 name         = 'DNS Records'
                                 kind         = 'Textbox'
                                 hint         = 'Table of DNS records in the zone'
