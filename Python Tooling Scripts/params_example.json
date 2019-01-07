@@ -1,0 +1,5 @@
+{
+  "SourceAccountAPIKey": "original_account_api_key",
+  "APIUrl": "api_region_endpoint",
+  "TargetAccountAPIKEy": "copy_to_account_api_key"
+}
