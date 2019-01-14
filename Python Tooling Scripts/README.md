@@ -58,5 +58,12 @@ To initiate copying of the flexible asset types, run
 ```
 python copy_flexible_asset_types.py
 ```
-If there are flexible asset types with the same name in the target account as the
-types in the source account, the script will not update the existing types in the target account.
+
+
+### 3. Notes
+* If there are flexible asset types with the same name in the target account as the
+types in the source account, the script will not update the existing types in
+the target account.
+* Console output will indicate if any of the flexible asset types encounter an
+IT Glue API error during the copy. Please fix error prior to re-running the script.
+* Re-running the script will not duplicate the copying of flexible asset types.

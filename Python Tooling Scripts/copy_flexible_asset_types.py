@@ -11,30 +11,13 @@ class ITGlueError(Exception):
     pass
 
 
-def set_connection_creds(api_key):
-    itglue.connection.api_key = api_key
-
-
-def get_api_url_and_key():
-    with open('{}/params.json'.format(DIR_PATH)) as file:
-        params = json.load(file)
-        itglue.connection.api_url = params['APIUrl']
-        return params['SourceAccountAPIKey'], params['TargetAccountAPIKEy']
-
-
-def get_all_flex_types(api_key):
-    """Get all flexible asset types from source account"""
-    set_connection_creds(api_key)
-    flex_types = itglue.FlexibleAssetType.get()
-    return flex_types
-
-
 def copy_flex_types(target_api_key, flex_types):
     """Create flexible asset types that does not have a
     flexible asset type tag field in the new account
-    Returns 2 lists:
+    Returns 3 lists:
     * Created types in the new account with its corresponding new ID
     * List of flexible asset fields with tag-type of another flexible asset types
+    * List of flexible asset types with only tag-types of "FlexibleAssetType"
     """
     fa_types_matching = {}
     tag_fields = []
@@ -61,23 +44,6 @@ def copy_flex_types(target_api_key, flex_types):
     return fa_types_matching, tag_fields, tags_only_types
 
 
-def extract_field_id(field):
-    tag_id = re.search('(?<=FlexibleAssetType: )\d+', field.attributes['tag_type'])
-    return tag_id.group(0)
-
-
-def extract_tag_type(type_id, fields):
-    """Remove all fields that have a FlexibleAssetType tag-type"""
-    tagged_fields = []
-    fields_copy = fields[:]
-    for index, field in enumerate(fields_copy[:]):
-        attr = field.attributes
-        if attr['kind'] == 'Tag' and ('FlexibleAssetType:' in attr['tag_type']):
-            tagged_fields.append({type_id: field})
-            fields_copy.remove(field)
-    return tagged_fields, fields_copy
-
-
 def create_field_tag_type(fields, new_type_ids):
     """Create new FlexibleAssetField with the new flex type ID"""
     for field in fields:
@@ -90,16 +56,8 @@ def create_field_tag_type(fields, new_type_ids):
                 print('Unable to create tag field for flexible asset type ID: {}'.format(key))
 
 
-def update_tag_type_id(field, new_type_ids):
-    tag_id = extract_field_id(field)
-    try:
-        field.attributes['tag_type'] = 'FlexibleAssetType: {}'.format(new_type_ids[tag_id])
-        return field
-    except KeyError:
-        return False
-
-
 def create_tags_only_types(target_api, types, new_type_ids):
+    """Copy types that only has FlexibleAssetType tag fields"""
     while types:
         type = types.pop()
         updated_fields = []
@@ -114,7 +72,33 @@ def create_tags_only_types(target_api, types, new_type_ids):
             new_type_ids[type['id']] = created_type.id
 
 
+def extract_tag_type(type_id, fields):
+    """Remove all fields that have a FlexibleAssetType tag-type"""
+    tagged_fields = []
+    fields_copy = fields[:]
+    for index, field in enumerate(fields_copy[:]):
+        attr = field.attributes
+        if attr['kind'] == 'Tag' and ('FlexibleAssetType:' in attr['tag_type']):
+            tagged_fields.append({type_id: field})
+            fields_copy.remove(field)
+    return tagged_fields, fields_copy
+
+
+def update_tag_type_id(field, new_type_ids):
+    """Update tag field with the new flexible asset type ID in target account"""
+    tag_id = extract_field_id(field)
+    try:
+        field.attributes['tag_type'] = 'FlexibleAssetType: {}'.format(new_type_ids[tag_id])
+        return field
+    except KeyError:
+        return False
+
+
 def find_or_initialize_flex_type(api_key, type_name):
+    """
+    Returns type with the same name in the target account or initialize
+    a new flexible asset type
+    """
     set_connection_creds(api_key)
     type = itglue.FlexibleAssetType.first_or_initialize(name=type_name)
     if type.id:
@@ -136,6 +120,29 @@ def create_new_flex_types(api_key, new_type, new_fields):
         raise e
 
 
+def set_connection_creds(api_key):
+    itglue.connection.api_key = api_key
+
+
+def get_api_url_and_key():
+    with open('{}/params.json'.format(DIR_PATH)) as file:
+        params = json.load(file)
+        itglue.connection.api_url = params['APIUrl']
+        return params['SourceAccountAPIKey'], params['TargetAccountAPIKEy']
+
+
+def get_all_flex_types(api_key):
+    """Get all flexible asset types from source account"""
+    set_connection_creds(api_key)
+    flex_types = itglue.FlexibleAssetType.get()
+    return flex_types
+
+
+def extract_field_id(field):
+    tag_id = re.search('(?<=FlexibleAssetType: )\d+', field.attributes['tag_type'])
+    return tag_id.group(0)
+
+
 def get_all_fields(flex_types):
     all_fields = {}
     for type in flex_types:
@@ -148,7 +155,7 @@ def get_flex_asset_fields(flex_type):
     """Create new flexible asset fields with original attributes"""
     updated_fields = []
     flex_asset_fields = itglue.FlexibleAssetField.get(parent=flex_type)
-    if len(flex_asset_fields) < 0:
+    if not flex_asset_fields:
         return ITGlueError('This flexible asset type {} does not have any fields.'.format(flex_type.attributes['name']))
     for field in flex_asset_fields:
         field_attr = extract_attributes(field.attributes)
@@ -167,9 +174,9 @@ def extract_attributes(attributes):
 def main():
     source_api, target_api = get_api_url_and_key()
     flex_types = get_all_flex_types(source_api)
-    new_types, tagged_list, tags_only_types = copy_flex_types(target_api, flex_types)
-    create_field_tag_type(tagged_list, new_types)
-    create_tags_only_types(target_api, tags_only_types, new_types)
+    type_id_maapping, tagged_list, tags_only_types = copy_flex_types(target_api, flex_types)
+    create_field_tag_type(tagged_list, type_id_maapping)
+    create_tags_only_types(target_api, tags_only_types, type_id_maapping)
 
 
 if __name__ == '__main__':
