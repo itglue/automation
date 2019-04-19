@@ -31,7 +31,7 @@ Param (
     [switch]$continuum = $False,
     [string]$api,
     [string]$file,
-    [string]$organization = "UNIGLOBE BL TRAVEL"
+    [string]$organization = ""
 )
 
 # Print Results
