@@ -31,7 +31,7 @@ Param (
     [switch]$continuum = $False,
     [string]$api,
     [string]$file,
-    [string]$organization = ""
+    [string]$organization = "UNIGLOBE BL TRAVEL"
 )
 
 # Print Results
@@ -54,8 +54,8 @@ function writeOutput {
     Write-Host "Disk Path:  `t" -ForegroundColor Gray -NoNewline
     Write-Host "`t `t" $DiskPath "`n"
 
-    <#Write-Host "Permissions:  `t" -ForegroundColor Gray -NoNewline
-    Write-Host "`t `t" $permissions "`n"#>
+    Write-Host "Permissions:  `t" -ForegroundColor Gray -NoNewline
+    Write-Host "`t `t" $permissions "`n"
 }
 
 function updateAPIConfigFile {
@@ -238,13 +238,13 @@ else {
                         $api__org_id = $api__body.data.attributes.organization_id
                         $api__flex_asset_id = $api_config.flex_asset_id
                         
-                        if($api__org_id) {
+                        #if($api__org_id) {
                             Write-Host "Creating a new flexible asset."
 
                             $api__output_data = New-ITGlueFlexibleAssets -data $api__body
 
                             $api__output_data
-                        }
+                        #}
                     }
                     else {
                         Write-Error "ERROR: File Shares flex asset configuration file was found. Please create one and re-run the script."
