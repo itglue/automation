@@ -54,7 +54,7 @@ def create_field_tag_type(fields, new_type_ids):
                 new_field.attributes['flexible_asset_type_id'] = new_type_ids[key]
                 new_field.create()
             else:
-                print('Unable to create tag field for:\nsource flexible asset type ID: {}\ntarget flexible asset type ID: {}'.format(key, new_type_ids[key]))
+                print('Unable to create tag field for:\n\tsource flexible asset type ID: {}\n\ttarget flexible asset type ID: {}'.format(key, new_type_ids[key]))
 
 
 def create_tags_only_types(flex_types, new_type_ids):

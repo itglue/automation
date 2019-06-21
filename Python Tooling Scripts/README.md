@@ -67,3 +67,8 @@ the target account.
 * Console output will indicate if any of the flexible asset types encounter an
 IT Glue API error during the copy. Please fix error prior to re-running the script.
 * Re-running the script will not duplicate the copying of flexible asset types.
+* Order of Flexible asset type copying is:
+    1. Types without any flexible asset type tag fields
+    1. Types with flexible asset type tag fields
+    1. Types with *only* flexible asset type tag fields
+* If there are cyclical dependency between types and their tags, it will not create the tag field that creates a circle dependency
