@@ -16,7 +16,7 @@ Checkboxes: Required, Show in list, Use for title
 Name: AD Level
 Kind: Select
 Hint: Domain Functional Level
-Options: 2000, 2003, 2008, , 2008 R2, 2012, 2012 R2
+Options: 2000, 2003, 2008, 2008 R2, 2012, 2012 R2
 Checkboxes: Required, Show in list
 
 Name: Schema Master
