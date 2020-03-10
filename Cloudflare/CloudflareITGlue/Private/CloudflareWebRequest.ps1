@@ -12,13 +12,18 @@ function New-CloudflareWebRequest {
             $APIKey = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($CloudflareAPIKey))
         }
         catch {
-            Write-Warning 'New-CloudflareWebRequest:  Unable to decrypt auth info'
-            Write-Warning 'Run Add-CloudflareITGlueAPIAuth to re-add'
+            Write-Warning 'Unable to decrypt auth info, run Add-CloudflareITGlueAPIAuth to re-add'
+            if ($CFITGLog) {
+                "[CF Request]$(Get-Date -Format G):  Unable to decrypt auth info, run Add-CloudflareITGlueAPIAuth to re-add" | Out-File $CFITGLog -Append
+            }
             break
         }
     }
     else {
         Write-Warning 'Run Add-CloudflareITGlueAPIAuth to add authorization info'
+        if ($CFITGLog) {
+            "[CF Request]$(Get-Date -Format G):  Run Add-CloudflareITGlueAPIAuth to add authorization info" | Out-File $CFITGLog -Append
+        }
         break
     }
 
@@ -31,13 +36,12 @@ function New-CloudflareWebRequest {
             'Content-Type' = 'application/json'
         }
     }
-    if ($Body) {$RequestParams.Body = $Body}
+    if ($Body) { $RequestParams.Body = $Body }
     
     try {
-        Start-Sleep -Milliseconds 275
         $Request = Invoke-RestMethod @RequestParams
-        Start-Sleep -Milliseconds 275
-        #RateLimit = 1200 requests/5 min but still getting gateway timeouts @ 300ms+
+        Start-Sleep -Milliseconds 325
+        # RateLimit: 1200/5 min
                 
         if ($PageNumber -lt $Request.result_info.total_pages) {
             $PageNumber++
@@ -49,6 +53,10 @@ function New-CloudflareWebRequest {
     }
     catch {
         Write-Warning "Something went wrong with Cloudflare request:`n$_"
+        if ($CFITGLog) {
+            "[CF Request: $Endpoint]$(Get-Date -Format G):  $_" | Out-File $CFITGLog -Append
+        }
+        
         $APIKey = $null
         $RequestParams = $null
     }

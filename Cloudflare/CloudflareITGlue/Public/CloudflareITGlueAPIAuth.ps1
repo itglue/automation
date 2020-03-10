@@ -1,37 +1,36 @@
 function Add-CloudflareITGlueAPIAuth {
     if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] 'Administrator')) {   
         Write-Host 'Add/removing API Auth require admin access' -ForegroundColor Yellow
+        break
     }
-    else {
-        [pscredential]$CloudflareCredentials = $Host.UI.PromptForCredential('Cloudflare API Authentication', "User name:  Cloudflare Email`r`nPassword:    Cloudflare API Key", '', '')
-        [pscredential]$ITGCredentials = $Host.UI.PromptForCredential('ITGlue API Authentication', 'Password:    ITGlue API Key', 'ITGlue', '')
-        $Global:CloudflareAPIEmail = $CloudflareCredentials.username
-        $Global:CloudflareAPIKey = $CloudflareCredentials.Password
-        $Global:ITGlueAPIKey = $ITGCredentials.Password
+    [pscredential]$CloudflareCredentials = $Host.UI.PromptForCredential('Cloudflare API Authentication', "User name:  Cloudflare Email`r`nPassword:    Cloudflare API Key", '', '')
+    [pscredential]$ITGCredentials = $Host.UI.PromptForCredential('ITGlue API Authentication', 'Password:    ITGlue API Key', 'ITGlue', '')
+    $Global:CloudflareAPIEmail = $CloudflareCredentials.username
+    $Global:CloudflareAPIKey = $CloudflareCredentials.Password
+    $Global:ITGlueAPIKey = $ITGCredentials.Password
         
-        if (!$CloudflareAPIEmail -or !$CloudflareAPIKey -or !$ITGlueAPIKey) {
-            Write-Host 'Cancelled' -ForegroundColor Yellow
-            break
-        }
-        if ($CloudflareAPIEmail -notmatch "\A[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\z") {
-            Write-Host 'Invalid email address format' -ForegroundColor Yellow
-            break
-        }
-        if (!$CloudflareCredentials.GetNetworkCredential().Password -or !$ITGCredentials.GetNetworkCredential().Password) {
-            Write-Warning 'API key(s) not entered'
-            break
-        }
-        $Credentials = @{
-            CloudflareEmail  = $CloudflareAPIEmail
-            CloudflareAPIKey = ($CloudflareAPIKey | ConvertFrom-SecureString)
-            ITGlueAPIKey     = ($ITGlueAPIKey | ConvertFrom-SecureString)
-        }
-        $Auth = @()
-        $Auth += [pscustomobject]$Credentials
-        $ModuleBase = Get-Module CloudflareITGlue | ForEach-Object ModuleBase
-        
-        $Auth | Export-Csv "$ModuleBase\$env:username.auth" -NoTypeInformation -Force
+    if (!$CloudflareAPIEmail -or !$CloudflareAPIKey -or !$ITGlueAPIKey) {
+        Write-Host 'Cancelled' -ForegroundColor Yellow
+        break
     }
+    if ($CloudflareAPIEmail -notmatch "\A[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\z") {
+        Write-Host 'Invalid email address format' -ForegroundColor Yellow
+        break
+    }
+    if (!$CloudflareCredentials.GetNetworkCredential().Password -or !$ITGCredentials.GetNetworkCredential().Password) {
+        Write-Warning 'API key(s) not entered'
+        break
+    }
+    $Credentials = @{
+        CloudflareEmail  = $CloudflareAPIEmail
+        CloudflareAPIKey = ($CloudflareAPIKey | ConvertFrom-SecureString)
+        ITGlueAPIKey     = ($ITGlueAPIKey | ConvertFrom-SecureString)
+    }
+    $Auth = @()
+    $Auth += [pscustomobject]$Credentials
+    $ModuleBase = Get-Module CloudflareITGlue | ForEach-Object ModuleBase
+        
+    $Auth | Export-Csv "$ModuleBase\$env:username.auth" -NoTypeInformation -Force
 }
 
 function Get-CloudflareITGlueAPIAuth {
@@ -65,13 +64,12 @@ function Get-CloudflareITGlueAPIAuth {
 function Remove-CloudflareITGlueAPIAuth {
     if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] 'Administrator')) {   
         Write-Host 'Add/removing API Auth require admin access' -ForegroundColor Yellow
+        break
+    }
+    if (Test-Path "$ModuleBase\$env:username.auth") {
+        Remove-Item "$ModuleBase\$env:username.auth" -Force
     }
     else {
-        if (Test-Path "$ModuleBase\$env:username.auth") {
-            Remove-Item "$ModuleBase\$env:username.auth" -Force
-        }
-        else {
-            Write-Host 'Not added' -ForegroundColor Yellow
-        }
+        Write-Host 'Not added' -ForegroundColor Yellow
     }
 }
