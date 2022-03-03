@@ -1,17 +1,38 @@
 function Sync-CloudflareITGlueFlexibleAssets {
     param(
-        [string]$FlexAssetType = 'Cloudflare DNS'
+        [string]$FlexAssetType = 'Cloudflare DNS',
+        [string]$Log
     )
-    
     $Progress = 0
+
+    if ($Log) {
+        if (Test-Path $Log) {
+            $Global:CFITGLog = $Log
+        }
+        else {
+            New-Item -ItemType File -Path $Log -ErrorAction Ignore | Out-Null
+            if (Test-Path $Log) {
+                $Global:CFITGLog = $Log
+            }
+            else {
+                Write-Warning "Unable to create log file: $Log - Invalid path or access denied"
+                return
+            }
+        }
+    }
+    
     $ZoneDataArray = Get-CloudflareZoneDataArray
-    $FlexAssetTypeId = New-ITGlueWebRequest -Endpoint 'flexible_asset_types' -Method 'GET' | ForEach-Object data | Where-Object {$_.attributes.name -eq $FlexAssetType} | ForEach-Object id
+    $FlexAssetTypeId = New-ITGlueWebRequest -Endpoint 'flexible_asset_types' -Method 'GET' | ForEach-Object data | Where-Object { $_.attributes.name -eq $FlexAssetType } | ForEach-Object id
+    if (!$FlexAssetTypeId) {
+        New-CloudflareITGlueFlexAssetType -Name $FlexAssetType | Out-Null
+        $FlexAssetTypeId = New-ITGlueWebRequest -Endpoint 'flexible_asset_types' -Method 'GET' | ForEach-Object data | Where-Object { $_.attributes.name -eq $FlexAssetType } | ForEach-Object id
+    }
 
     foreach ($ZoneData in $ZoneDataArray) {
-        Write-Progress -Activity 'ITGlueAPI' -Status 'Syncing Flexible Assets' -CurrentOperation $ZoneData.name -PercentComplete ($Progress / ($ZoneDataArray | Measure-Object | foreach-object count) * 100) -Id 2
+        Write-Progress -Activity 'ITGlueAPI' -Status 'Syncing Flexible Assets' -CurrentOperation $ZoneData.name -PercentComplete ($Progress / ($ZoneDataArray | Measure-Object | ForEach-Object count) * 100) -Id 2
 
         $TempFile = New-TemporaryFile
-        $ZoneData.ZoneFileData | Out-file $TempFile -Force -Encoding utf8
+        $ZoneData.ZoneFileData | Out-file $TempFile -Force -Encoding ascii
         $Base64ZoneFile = ([System.Convert]::ToBase64String([System.IO.File]::ReadAllBytes($TempFile)))
         Remove-Item $TempFile -Force
         $Body = @{
@@ -21,16 +42,15 @@ function Sync-CloudflareITGlueFlexibleAssets {
                     'organization-id'        = $ZoneData.ITGOrg
                     'flexible-asset-type-id' = $FlexAssetTypeId
                     'traits'                 = @{
-                        'name'           = $ZoneData.Name
-                        'last-sync'      = $ZoneData.SyncDate
-                        'nameservers'    = $ZoneData.CfNameServers -join '<br>'
-                        'status'         = $ZoneData.Status
-                        'zone-file'      = @{
+                        'name'        = $ZoneData.Name
+                        'last-sync'   = $ZoneData.SyncDate
+                        'nameservers' = $ZoneData.CfNameServers -join '<br>'
+                        'status'      = $ZoneData.Status
+                        'zone-file'   = @{
                             'content'   = $Base64ZoneFile
-                            'file_name' = "$($ZoneData.Name).txt"
+                            'file_name' = "$($ZoneData.Name)_$((Get-Date).ToUniversalTime() | Get-Date -Format "yyyy-MM-ddTHHmmssK").txt"
                         }
-                        'dns-records'    = $ZoneData.RecordsHtml
-                        'domain-tracker' = $ZoneData.DomainTracker
+                        'dns-records' = $ZoneData.RecordsHtml
                     }
                 }
             }
@@ -45,11 +65,47 @@ function Sync-CloudflareITGlueFlexibleAssets {
             }
         }
         if ($PatchId) {
-            New-ITGlueWebRequest -Endpoint "flexible_assets/$PatchId" -Method 'PATCH' -Body $Body
+            try {
+                $FlexAssetId = New-ITGlueWebRequest -Endpoint "flexible_assets/$PatchId" -Method 'PATCH' -Body $Body
+                if ($CFITGLog) {
+                    "[ITG]$(Get-Date -Format G):  Updating $($ZoneData.Name)" | Out-File $CFITGLog -Append
+                }
+            }
+            catch {
+                Write-Warning "Something went wrong updating $($ZoneData.Name)`n$_"
+                if ($CFITGLog) {
+                    "[ITG]$(Get-Date -Format G):  Something went wrong updating $($ZoneData.Name)`n$_" | Out-File $CFITGLog -Append
+                }
+                continue
+            }
         }
         else {
-            New-ITGlueWebRequest -Endpoint 'flexible_assets' -Method 'POST' -Body $Body
+            try {
+                $FlexAssetId = New-ITGlueWebRequest -Endpoint 'flexible_assets' -Method 'POST' -Body $Body
+                if ($CFITGLog) {
+                    "[ITG]$(Get-Date -Format G):  Creating $($ZoneData.Name)" | Out-File $CFITGLog -Append
+                }
+            }
+            catch {
+                Write-Warning "Something went wrong creating $($ZoneData.Name)`n$_"
+                if ($CFITGLog) {
+                    "[ITG]$(Get-Date -Format G):  Something went wrong creating $($ZoneData.Name)`n$_" | Out-File $CFITGLog -Append
+                }
+                continue
+            }
         }
+        $TagBody = @{
+            data = @{
+                type       = 'related_items'
+                attributes = @{
+                    'destination_id'   = $ZoneData.DomainTracker
+                    'destination_type' = 'Domain'
+                }
+            }
+        }
+        $TagBody = $TagBody | ConvertTo-Json -Depth 4
+        New-ITGlueWebRequest -Endpoint "flexible_assets/$($FlexAssetId.data.id)/relationships/related_items" -Method POST -Body $TagBody | Out-Null
+
         $Progress++
     }
     Write-Progress -Activity 'ITGlueAPI' -Status 'Syncing Flexible Assets' -PercentComplete 100 -Id 2

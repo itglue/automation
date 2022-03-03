@@ -68,7 +68,7 @@ function New-CloudflareITGlueFlexAssetType {
                                 order        = 5
                                 name         = 'Zone File'
                                 kind         = 'Upload'
-                                hint         = 'Exported zone file in BIND format. You can upload this to Cloudflare. UTF-8 Encoded, use notepad++ for better viewing.'
+                                hint         = 'Exported zone file in BIND format. You can upload this to Cloudflare.'
                                 required     = $false
                                 show_in_list = $false
                             }
@@ -77,18 +77,6 @@ function New-CloudflareITGlueFlexAssetType {
                             type       = 'flexible_asset_fields'
                             attributes = @{
                                 order        = 6
-                                name         = 'Domain Tracker'
-                                kind         = 'Tag'
-                                hint         = 'Tagged in Domain Tracker'
-                                tag_type     = 'Domains'
-                                required     = $false
-                                show_in_list = $false
-                            }
-                        },
-                        @{
-                            type       = 'flexible_asset_fields'
-                            attributes = @{
-                                order        = 7
                                 name         = 'DNS Records'
                                 kind         = 'Textbox'
                                 hint         = 'Table of DNS records in the zone'

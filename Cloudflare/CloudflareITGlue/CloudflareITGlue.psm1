@@ -8,4 +8,6 @@ if (Test-Path "$ModuleBase\$env:username.auth") {
     $Global:ITGlueAPIKey = ($Auth.ITGlueAPIKey | ConvertTo-SecureString)
 }
 
+$Global:CFITGLog = $null
+
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
